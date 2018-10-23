@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  	<link href="https://fonts.googleapis.com/css?family=Roboto:100" rel="stylesheet">
+    <link rel="icon" href="https://treebuilder.io/favicon.ico?v=2" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimal-ui" />
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+	<title>Tree Builder</title>
+  <script type="text/javascript" src="node_modules/angular/angular.min.js"></script>
+  <script type="text/javascript" src="node_modules/angular-animate/angular-animate.min.js"></script>
+  <script type="text/javascript" src="node_modules/angular-aria/angular-aria.min.js"></script>
+  <script type="text/javascript" src="node_modules/angular-material/angular-material.min.js"></script>
+  <script type="text/javascript" src="node_modules/angular-messages/angular-messages.min.js"></script>
+  <script type="text/javascript" src="node_modules/angular-sanitize/angular-sanitize.min.js"></script>
+	<script type="text/javascript" src="libs/d3.min.js"></script>
+	<!--<script type="text/javascript" src="libs/jquery-1.11.3.min.js"></script>-->
+  <!-- <script type="text/javascript" src="libs/require.min.js"></script>-->
+
+  <script type="text/javascript" src="js/d3-transform.js"></script>
+  <script type="text/javascript" src="js/config.js"></script><!-- Holds the link to the server -->
+  <script type="text/javascript" src="js/controller.js"></script>
+  
+  <link rel="stylesheet" href="node_modules/angular-material/angular-material.css">
+	<!--<link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/skeleton.css">-->
+	<link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body ng-app="App" ng-controller="main_ctrl">
+  <md-toolbar >
+
+      <div flex id="dialog_div" class="top" layout="row" layout-align="space-between center">
+        
+        <div class='tree-tools'> 
+          <img ng-if="showing" src='images/show_display.svg' ng-click="show($event)"> 
+          <img ng-if="!showing" src='images/show_edit.svg' ng-click="show($event)"> 
+        </div>
+        <p>pathology precise orthoses</p>
+        <div class='tree-tools' > 
+          <md-menu>
+            <img src='images/open.svg' ng-click="openMenu($mdMenu, $event)" > 
+
+            <md-menu-content width="4">
+              <md-menu-item>
+                <md-button ng-click="newTree($event)">
+                  <md-icon md-svg-src="images/open_black.svg" md-menu-align-target></md-icon>
+                  New
+                </md-button>
+              </md-menu-item>
+              <md-menu-item>
+                <md-button ng-click="open($event)">
+                  <md-icon md-svg-src="images/open_black.svg" md-menu-align-target></md-icon>
+                  Open
+                </md-button>
+              </md-menu-item>
+              <md-divider></md-divider>
+              <md-menu-item>
+                <md-button ng-click="save($event, false)">
+                  <md-icon  md-svg-src="images/save_black.svg"></md-icon>
+                  Save
+                </md-button>
+              </md-menu-item>
+              <md-menu-item>
+                <md-button ng-click="save($event, true)">
+                  <md-icon  md-svg-src="images/save_black.svg"></md-icon>
+                  Save As
+                </md-button>
+              </md-menu-item>
+              <md-menu-item>
+                <md-button ng-click="download($event)">
+                  <md-icon  md-svg-src="images/download.svg"></md-icon>
+                  JSON
+                </md-button>
+              </md-menu-item>
+              <md-divider></md-divider>
+              <md-menu-item>
+                <md-button ng-click="help($event)">
+                  <md-icon  md-svg-src="images/help_black.svg"></md-icon>
+                  Help
+                </md-button>
+              </md-menu-item>
+            </md-menu-content>
+          </md-menu>
+        </div>   
+      </div>
+
+  </md-toolbar>
+  <md-content class="main_content" layout-fill>
+    <div layout="row" flex id="tree"></div>
+  </md-content>
+</body>
+</html>

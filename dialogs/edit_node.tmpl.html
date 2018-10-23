@@ -1,0 +1,67 @@
+<md-dialog class="dialog_edit_node" aria-label="Add a new customer">
+  <form>
+    <md-toolbar class="dialog_edit_node_toolbar">
+      <div class="md-toolbar-tools">
+        <h2 flex md-truncate>Edit Node</h2>
+        <md-button ng-if="node.parent" class="md-icon-button" ng-click="deleteNode()" aria-label="Delete the node">
+          <md-icon md-svg-icon="images/delete.svg"></md-icon>
+          <md-tooltip>Delete the node</md-tooltip>
+        </md-button>
+        <md-button class="md-icon-button" ng-click="sateliteControl()" aria-label="Add satelite">
+          <md-icon md-svg-icon="images/satelite.svg"></md-icon>
+          <md-tooltip>Satelite control</md-tooltip>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content >
+      <md-content class="md-padding">
+          <div layout-gt-sm="row" >
+            <md-input-container>
+              <label>Name</label>
+              <input ng-model="node.name">
+            </md-input-container>
+            <md-input-container>
+              <label>Image</label>
+              <md-select ng-model="node.image">
+                <md-option><em>None</em></md-option>
+                <md-option ng-repeat="image in image_list" ng-value="image.name">
+                  {{image.title}}<span flex> </span><img class="tiny_img" ng-src="images/tree/{{image.name}}" />
+                </md-option>
+              </md-select>
+            </md-input-container>
+          </div>
+          <div  layout-gt-sm="row"><!--ng-if="node.parent"-->
+            <md-input-container flex>
+              <label>Entry Question</label>
+              <textarea ng-model="node.parent.question" md-maxlength="250" rows="1" md-select-on-focus></textarea>
+            </md-input-container>
+          </div>
+          <div ng-if="node.parent" layout-gt-sm="row">
+            <md-input-container flex>
+              <label>Entry Answer</label>
+              <input ng-model="node.answer">
+            </md-input-container>
+          </div>
+          <div layout-gt-sm="row">
+            <md-input-container flex="100" class="md-block">
+              <label>Node Text</label>
+              <textarea ng-model="node.question" md-maxlength="250" rows="1" md-select-on-focus></textarea>
+            </md-input-container>
+          </div>
+          <div ng-if="node.satelites" layout-gt-sm="row">
+            {{JSON.stringify(node.satelites)}}
+          </div>
+
+      </md-content>
+    </md-dialog-content>
+    <md-dialog-actions layout="row">
+      <span flex></span>
+      <md-button ng-click="submitNode()" >
+        Save
+      </md-button>
+      <md-button ng-click="cancelNode()" style="margin-right:20px;" >
+        Cancel
+      </md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

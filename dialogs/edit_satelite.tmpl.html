@@ -1,0 +1,58 @@
+<md-dialog class="dialog_edit_node" aria-label="Add a new customer">
+  <form>
+    <md-toolbar class="dialog_edit_node_toolbar">
+      <div class="md-toolbar-tools">
+        <h2 flex md-truncate>Satelites {{node.name}}</h2>
+      </div>
+    </md-toolbar>
+    <md-dialog-content >
+      <md-content class="md-padding">
+          
+          <div layout-gt-sm="row" ng-repeat="satelite in node.satelites">
+
+            <md-input-container flex>
+              <label>Name</label>
+              <input ng-model="satelite.name">
+            </md-input-container>
+
+            <md-input-container flex>
+              <label>Image</label>
+              <md-select ng-model="satelite.image">
+                <md-option><em>None</em></md-option>
+                <md-option ng-repeat="image in image_list" ng-value="image.name">
+                  <div flex="100">
+                    {{image.title}}<span flex> </span><img class="tiny_img" ng-src="images/tree/{{image.name}}" />
+                  </div>
+                </md-option>
+              </md-select>
+            </md-input-container>
+          
+            <md-input-container >
+              <label>Satelite Text</label>
+              <textarea ng-model="satelite.text" md-maxlength="250" rows="1" md-select-on-focus></textarea>
+            </md-input-container>
+
+            <md-icon md-svg-icon="images/delete.svg" ng-click="deleteSatelite()"></md-icon>
+
+          </div>
+
+          <div layout-gt-sm="row" layout-align="center center" flex="100">
+            <md-button class="md-icon-button" ng-click="addSatelite()" aria-label="Add satelite">
+              <md-icon md-svg-icon="images/add_black.svg" ></md-icon>
+              <md-tooltip>Add Satelite</md-tooltip>
+            </md-button>
+          </div>
+
+      </md-content>
+    </md-dialog-content>
+    <md-dialog-actions layout="row">
+      <span flex></span>
+      <md-button ng-click="submitNode()" >
+        Save
+      </md-button>
+      <md-button ng-click="cancelNode()" style="margin-right:20px;" >
+        Cancel
+      </md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

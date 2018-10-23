@@ -1,0 +1,27 @@
+<md-dialog class="dialog_edit_node" aria-label="Add a new customer">
+  <form>
+    <md-toolbar class="dialog_edit_node_toolbar">
+      <div class="md-toolbar-tools">
+        <h2 flex md-truncate>Open Tree</h2>
+
+      </div>
+    </md-toolbar>
+    <md-dialog-content >
+        <md-content class="md-padding">
+        <md-list flex>
+          <md-list-item  ng-repeat="file in file_list" ng-click="open_file(file)">
+            <div class="md-list-item-text">
+              <p>{{ file.name }}</p>
+            </div>
+          </md-list-item>
+        </md-list>
+      </md-content>
+    </md-dialog-content>
+    <md-dialog-actions layout="row">
+      <span flex></span>
+      <md-button ng-click="cancelOpen()" style="margin-right:20px;" >
+        Cancel
+      </md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>
