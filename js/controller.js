@@ -1,15 +1,13 @@
-console.log("OPENING A NEW TREE DOES NOT WORK :  ITS NOT EDITABLE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
 var app = angular.module('App', ['ngMaterial', 'ngMessages', 'ngAnimate', 'ngSanitize']);
 
 var force, force_g, link_force, node_force;
 
 app.config(function($httpProvider, $mdThemingProvider, $mdIconProvider, $mdDateLocaleProvider) {
 
-  /******* Primary theme Firefly Orange *****/
+  /******* Primary theme *****/
   $mdThemingProvider.theme('default')
-    .primaryPalette('deep-orange')//deep-orange
-    .accentPalette('deep-orange');//indigo
+    .primaryPalette('deep-orange')
+    .accentPalette('deep-orange');
   /****** Theme options *******/
   $mdThemingProvider.theme('dark-grey').backgroundPalette('grey').dark();
   $mdThemingProvider.theme('dark-orange').backgroundPalette('orange').dark();
@@ -24,364 +22,51 @@ app.config(function($httpProvider, $mdThemingProvider, $mdIconProvider, $mdDateL
 });
 
 app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSidenav,  $window){/* This one can deal with all the main page shit Nav and such */
-  //$scope.image_list = ['tree','question', 'branch', 'leaf' ];
-  $scope.image_list = [];
-  $scope.this_tree_name = 'test_tree';
 
-  var start_tree = 'firefly';
-  var zoom_level = 3;
+  start('firefly_2', 3);
 
-  
-  var start_tree = 'device_tree';
-  var zoom_level = 5;
-  
-  var zoomed = false;
+  function start(start_tree, zoom_level){
 
-  $scope.showing = false;
+    setTimeout(function(){ // start up calls //
+      getTree(start_tree, false);
+      getImages();
+    },200); // Get the JSON //
 
-  var originatorEv;
+    $scope.this_tree_name = start_tree;
+    $scope.showing = false;
+    $scope.image_list = [];
+    $scope.nodes = [];
 
-  $scope.help = function(ev){       
-    $mdDialog.show(
-      $mdDialog.alert()
-        .parent(angular.element(document.querySelector('body')))
-        .clickOutsideToClose(true)
-        .title('treebuilder.io help')
-        .htmlContent('<div class="help">Tree builder allows you to build and navigate \n decision trees. You can also export the trees \n in json format.</div>')
-        .ariaLabel('help')
-        .ok('Got it!')
-        .targetEvent(ev)
-    );
-  }
+    var originatorEv;
+    var windowWidth = document.getElementById('tree').clientWidth;// Set the main width for the chart
+    var windowHeight = document.getElementById('tree').clientHeight;// Set the height for the chart
+    var margin = {top: 20, right: 40, bottom: 20, left: 40}, width = windowWidth, height = 800 - margin.bottom; // Margin object holds all margins, obvs
 
-  $scope.openMenu = function($mdMenu, ev) {
-      originatorEv = ev;
-      $mdMenu.open(ev);
-  };
-
-  $scope.open = function(ev) {
-    
-    $http.post(server+"file_list", {
-      data: {}
-    }).then(function success(response) {
-      console.log(response.data)
-      $scope.file_list = response.data;
-      $mdDialog.show({
-          controller: open_file_ctrl,
-          scope: $scope.$new(),
-          templateUrl: 'dialogs/open_file.tmpl.html',
-          parent: angular.element(document.body),
-          clickOutsideToClose:true
-        })
-    })
-
-    function open_file_ctrl(){
-
-      $scope.cancelOpen = function(){
-        $mdDialog.cancel();
-      }
-
-      $scope.open_file = function(file){
-        $mdDialog.cancel();
-        console.log("opening : "+file.name);
-        getTree(file.name, false);
-      }
-    }
-
-  };
-
-  $scope.save = saveTree;
-
-  function saveTree(ev, save_as){
-
-    if($scope.this_tree_name===""){
-      var confirm = $mdDialog.prompt()
-        .title('Name your tree')
-        //textContent('')
-        .placeholder('Tree name')
-        .ariaLabel('Tree name')
-        .initialValue('Tree name')
-        .targetEvent(ev)
-        .required(true)
-        .ok('Okay')
-        .cancel('Cancel');
-
-      $mdDialog.show(confirm).then(function(result) {
-        $scope.this_tree_name = result ;
-        saveTree(ev);
-      }, function() {
-        
-      });
-    }else{
-      var savable_tree = [];
-      // Convert to non-circular json
-      for(var n in $scope.nodes){
-        for(var i in $scope.nodes[n]){
-          if(!savable_tree[n])savable_tree[n] = {};
-          if(typeof $scope.nodes[n][i] === 'object'){
-            if(i==='satelites')savable_tree[n][i] = $scope.nodes[n][i];
-            else savable_tree[n][i] = $scope.nodes[n][i].name;
-          }else savable_tree[n][i] = $scope.nodes[n][i];
-        }
-      }
-      $http.post(server+"save_tree", {
-        data: {name:$scope.this_tree_name, tree:savable_tree}
-      }).then(function success(response) {
-
-        $mdDialog.show(
-          $mdDialog.alert()
-            .parent(angular.element(document.querySelector('body')))
-            .clickOutsideToClose(true)
-            .title('Saved')
-            .htmlContent('<div class="help">The tree has been saved.</div>')
-            .ariaLabel('Tree Saved')
-            .ok('OK')
-            .targetEvent(ev)
-        );
-      })      
-    }
-
-  } 
-
-  getImages();
-
-  function getImages(){
-    $http.post(server+"get_image_list", {
-      data: {}
-    }).then(function success(response) {
-      var d = response.data;
-      $scope.image_list = [];
-      for(var i in d){
-        $scope.image_list.push({title: makeTitle(d[i]), name:d[i]});
-      }
-    })
-  }
-
-  getTree(start_tree, false);//device_tree
-
-  function getTree(name, use_base){
-    console.log("get tree nodes : ")
-         d3.selectAll(".text_box_div").html("");/******************************* testing *****/
-    $http.post(server+"get_tree", {
-      data: {name:name}
-    }).then(function success(response) {
-      console.log(response.data)
-      if(response.data ==='Not found'|| use_base){ // use base creates a new file //
-        // No saved tree so use the base tree //
-        d3.json("data/base_tree.json", function(error, treeJSON) { // This can come from the server //
-          if(!error){
-            $scope.this_tree_name = name;
-            console.log(treeJSON);
-            //treeJSON = niceTree(treeJSON);// if loading the ppo use this and treeJSON[0] below //
-            processTree(treeJSON[0]);
-          }
-          else console.log("Error getting base tree : "+error);
-        });
-      }else{
-
-        // *********** Convert flat data into a nice tree ***************
-        var data = response.data.tree;
-        console.log(data);
-        $scope.this_tree_name = name;
-        var tree_data = niceTree(data);
-        //console.log(tree_data)
-        processTree(tree_data[0]);
-      }
-    })
-  } 
-
-  function niceTree(d){
-    // create a name: node map
-    var dataMap = d.reduce(function(map, node) {
-      map[node.name] = node;
-      return map;
-    }, {});
-    // create the tree array
-    var tree_data = [];
-    d.forEach(function(node) {
-      // add to parent
-      var parent = dataMap[node.parent];
-      if (parent) {
-        // create child array if it doesn't exist
-        (parent.children || (parent.children = []))
-          // add node to child array
-          .push(node);
-      } else {
-        // parent is null or missing
-        tree_data.push(node);
-      }
-    });
-    return tree_data;
-  }
-
-  function download(){
-     var savable_tree = [];
-      // Convert to non-circular json
-      for(var n in $scope.nodes){
-        for(var i in $scope.nodes[n]){
-          if(!savable_tree[n])savable_tree[n] = {};
-          if(typeof $scope.nodes[n][i] === 'object'){
-            if(i==='satelites')savable_tree[n][i] = $scope.nodes[n][i];
-            else savable_tree[n][i] = $scope.nodes[n][i].name;
-          }else savable_tree[n][i] = $scope.nodes[n][i];
-        }
-      }
-      console.log("Saving : "+$scope.this_tree_name)
-      console.log(savable_tree);
-
-      downloadObjectAsJson(savable_tree, $scope.this_tree_name)
-  }
-
-  $scope.download = download;
-
-  function downloadObjectAsJson(exportObj, exportName){
-    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
-    var downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href",     dataStr);
-    downloadAnchorNode.setAttribute("download", exportName + ".json");
-    document.body.appendChild(downloadAnchorNode); // required for firefox
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-  }
-
-  function editNode(node){
-    console.log("EDITING NODE")
-    
-    $scope.node = node;
-      $mdDialog.show({
-          controller: editNodeController,
-          scope: $scope.$new(),
-          templateUrl: 'dialogs/edit_node.tmpl.html',
-          parent: angular.element(document.body),
-          clickOutsideToClose:true
-        }).then(function(something) {
-          console.log("Then");
-        }, function(err) {
-          console.log("err!!!")
-          console.log(err);
-        });
-
-        function editNodeController(){
-          
-          getImages();
-
-          $scope.submitNode= function(){
-            console.log("submitNode!")
-            console.log($scope.node)
-            update($scope.node);
-            $mdDialog.cancel();
-          }
-
-          $scope.cancelNode = function(){
-            console.log("cancel dialog")
-            $mdDialog.cancel();
-          }
-
-          $scope.deleteNode= function(){
-            console.log("Delete Node "+node.name)
-            $mdDialog.cancel();
-            removeNode(node)
-          }
-          
-          $scope.sateliteControl = function(){
-            $mdDialog.cancel();
-            editSatelites(node)
-          }
-        }
-  }
-  function editSatelites(node){
-    console.log("edit satelites")
-
-    $scope.node = node;
-
-    $mdDialog.show({
-        controller: editSatelitesController,
-        scope: $scope.$new(),
-        templateUrl: 'dialogs/edit_satelite.tmpl.html',
-        parent: angular.element(document.body),
-        clickOutsideToClose:true
-      })
-      .then(function(something) {
-        console.log(something);
-      }, function(err) {
-        console.log(err);
-      });
-
-      function editSatelitesController(){
-
-        $scope.submitNode= function(){
-          update($scope.node);
-          $mdDialog.cancel();
-        }
-        
-        $scope.addSatelite = function(){
-
-          if(!$scope.node.satelites)$scope.node.satelites = [];
-          
-          var baby_satelite = {
-              id:generateUUID(),
-              satelite:true,
-              name: "S_"+$scope.node.satelites.length,
-              image: "question.svg",
-              text:"",
-              x: Math.random()*width,
-              y: Math.random()*height,
-              parent:$scope.node.id
-          }
-          
-          $scope.node.satelites.push(baby_satelite)
- 
-        }
-
-        $scope.cancelSatelite = function(){
-          $mdDialog.cancel();
-        }
-
-        $scope.deleteSatelite= function(i){
-          console.log("Delete Node "+node.name)
-          $scope.node.satelites.splice(i,1);
-        }
-        
-      }
-  }
-    
-    var windowWidth = document.getElementById('tree').clientWidth;;// $('#tree').width();//($('#tree').width()) > 400? $('#tree').width() : 400;
-    var windowHeight = document.getElementById('tree').clientHeight;//$('#tree').height();
-    var margin = {top: 20, right: 40, bottom: 20, left: 40}, width = windowWidth, height = 800 - margin.bottom;
-    
-    var showLabels = false;
-
-    var tooltip = d3.select("body")
-        .append("div")
-        .attr("id","tooltip")
-        .attr("class", "tooltip");
-
-    var i = 0,
+    var zoomed = false; // When zoomed the focusOn function zooms the entire svg into the selected node
+    const i = 0,
       duration = 750,
       root,
       s=windowWidth/44,
       aI=0;
 
-    var r = windowWidth > 600 ? s-(s/6) : 20;//s-(s/6);
+    var r = windowWidth > 600 ? s-(s/6) : 20;
 
     var img_s = (r*1.3);
-    //console.log("Image size : "+img_s);
 
     var text_width = 100;
 
     var tree = d3.layout.tree()
       .size([width, height]);
 
-    var nodes;
-
     var diagonal = d3.svg.diagonal()
       .projection(function(d) { return [d.y, d.x]; });
 
+    d3.select("#tree").html("");
     var svg = d3.select("#tree").append("svg")
       .attr("width", width)
       .attr("height", height + margin.top + margin.bottom)
       .call(d3.behavior.zoom().on("zoom", function () {
-        pan_g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")")
+        pan_g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
       }))
         
     var pan_g = svg.append("g");
@@ -392,24 +77,295 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
         return d3.svg.transform()
           .translate( (width), margin.top+r+100)
           .rotate(90)();
-      })
+      });
 
     var zoom = d3.behavior.zoom()
       .translate([0, 0])
       .scale(1)
       .scaleExtent([1, 8])
       .on("zoom", zoomed);
-    
-    function zoomed() {
-      g.attr("transform", "translate(" + d3.event.translate + ")rotate(90)scale(" + d3.event.scale + ")");
-    }
+
+    $scope.help = function(ev){       
+      $mdDialog.show(
+        $mdDialog.alert()
+          .parent(angular.element(document.querySelector('body')))
+          .clickOutsideToClose(true)
+          .title('treebuilder.io help')
+          .htmlContent('<div class="help">Tree builder allows you to build and navigate \n decision trees. You can also export the trees \n in json format.</div>')
+          .ariaLabel('help')
+          .ok('Got it!')
+          .targetEvent(ev)
+      );
+    };
+
+    $scope.openMenu = function($mdMenu, ev) {
+        originatorEv = ev;
+        $mdMenu.open(ev);
+    };
+
+    $scope.open = function(ev) {
+      
+      $http.post(server+"file_list", {
+        data: {}
+      }).then(function success(response) {
+        console.log(response.data)
+        $scope.file_list = response.data;
+        $mdDialog.show({
+            controller: open_file_ctrl,
+            scope: $scope.$new(),
+            templateUrl: 'dialogs/open_file.tmpl.html',
+            parent: angular.element(document.body),
+            clickOutsideToClose:true
+          })
+      });
+
+      function open_file_ctrl(){
+        $scope.cancelOpen = function(){
+          $mdDialog.cancel();
+        }
+        $scope.open_file = function(file){
+          $mdDialog.cancel();
+          console.log("opening : "+file.name);
+          start(file.name, 3);
+        }
+      }
+    };
 
     $scope.newTree = function(ev){
       $scope.nodes=[];
       nodes = null;
       root=null;
       getTree("", true);
+    };
+
+    $scope.save = saveTree;
+
+    function saveTree(ev, save_as){
+
+      if($scope.this_tree_name===""){
+        var confirm = $mdDialog.prompt()
+          .title('Name your tree')
+          .placeholder('Tree name')
+          .ariaLabel('Tree name')
+          .initialValue('Tree name')
+          .targetEvent(ev)
+          .required(true)
+          .ok('Okay')
+          .cancel('Cancel');
+
+        $mdDialog.show(confirm).then(function(result) {
+          $scope.this_tree_name = result ;
+          saveTree(ev);
+        });
+
+      }else{
+        var savable_tree = [];
+        // Convert to non-circular json
+        for(var n in $scope.nodes){
+          for(var i in $scope.nodes[n]){
+            if(!savable_tree[n])savable_tree[n] = {};
+            if(typeof $scope.nodes[n][i] === 'object'){
+              if(i==='satelites')savable_tree[n][i] = $scope.nodes[n][i];
+              else savable_tree[n][i] = $scope.nodes[n][i].name;
+            }else savable_tree[n][i] = $scope.nodes[n][i];
+          }
+        }
+        $http.post(server+"save_tree", {
+          data: {name:$scope.this_tree_name, tree:savable_tree}
+        }).then(function success(response) {
+
+          $mdDialog.show(
+            $mdDialog.alert()
+              .parent(angular.element(document.querySelector('body')))
+              .clickOutsideToClose(true)
+              .title('Saved')
+              .htmlContent('<div class="help">The tree has been saved.</div>')
+              .ariaLabel('Tree Saved')
+              .ok('OK')
+              .targetEvent(ev)
+          );
+        })      
+      }
+    } 
+
+    function getImages(){
+      $http.post(server+"get_image_list", {
+        data: {}
+      }).then(function success(response) {
+        var d = response.data;
+        $scope.image_list = [];
+        for(var i in d){
+          $scope.image_list.push({title: makeTitle(d[i]), name:d[i]});
+        }
+      })
     }
+
+    function getTree(name, use_base){
+      console.log("get tree nodes : ")
+      $http.post(server+"get_tree", {
+        data: {name:name}
+      }).then(function success(response) {
+        console.log(response.data)
+        if(response.data ==='Not found'|| use_base){ // use base creates a new file //
+          // No saved tree so use the base tree //
+          d3.json("data/base_tree.json", function(error, treeJSON) { // This can come from the server //
+            if(!error){
+              $scope.this_tree_name = name;
+              processTree(treeJSON[0]);
+            }
+            else console.log("Error getting base tree : "+error);
+          });
+        }else{
+
+          // *********** Convert flat data into a nice tree ***************
+          var data = response.data.tree;
+          $scope.this_tree_name = name;
+          var tree_data = niceTree(data);
+          processTree(tree_data[0]);
+        }
+      })
+    } 
+
+    function niceTree(d){
+      // create a name: node map
+      var dataMap = d.reduce(function(map, node) {
+        map[node.name] = node;
+        return map;
+      }, {});
+      // create the tree array
+      var tree_data = [];
+      d.forEach(function(node) {
+        // add to parent
+        var parent = dataMap[node.parent];
+        if (parent) {
+          // create child array if it doesn't exist
+          (parent.children || (parent.children = []))
+            // add node to child array
+            .push(node);
+        } else {
+          // parent is null or missing
+          tree_data.push(node);
+        }
+      });
+      return tree_data;
+    };
+
+    function download(){
+       var savable_tree = [];
+        // Convert to non-circular json
+        for(var n in $scope.nodes){
+          for(var i in $scope.nodes[n]){
+            if(!savable_tree[n])savable_tree[n] = {};
+            if(typeof $scope.nodes[n][i] === 'object'){
+              if(i==='satelites')savable_tree[n][i] = $scope.nodes[n][i];
+              else savable_tree[n][i] = $scope.nodes[n][i].name;
+            }else savable_tree[n][i] = $scope.nodes[n][i];
+          }
+        }
+        downloadObjectAsJson(savable_tree, $scope.this_tree_name);
+    };
+
+    $scope.download = download;
+
+    function downloadObjectAsJson(exportObj, exportName){
+      var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+      var downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href",     dataStr);
+      downloadAnchorNode.setAttribute("download", exportName + ".json");
+      document.body.appendChild(downloadAnchorNode); // required for firefox
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+    };
+
+    function editNode(node){
+      $scope.node = node;
+        $mdDialog.show({
+            controller: editNodeController,
+            scope: $scope.$new(),
+            templateUrl: 'dialogs/edit_node.tmpl.html',
+            parent: angular.element(document.body),
+            clickOutsideToClose:true
+          })
+
+          function editNodeController(){
+            
+            getImages(); //update the image list //
+
+            $scope.submitNode= function(){
+              console.log("submitNode!")
+              console.log($scope.node)
+              update($scope.node);
+              $mdDialog.cancel();
+            }
+
+            $scope.cancelNode = function(){
+              console.log("cancel dialog")
+              $mdDialog.cancel();
+            }
+
+            $scope.deleteNode= function(){
+              console.log("Delete Node "+node.name)
+              $mdDialog.cancel();
+              removeNode(node)
+            }
+            
+            $scope.sateliteControl = function(){
+              $mdDialog.cancel();
+              editSatelites(node)
+            }
+          }
+    }
+    function editSatelites(node){
+
+      $scope.node = node;
+
+      $mdDialog.show({
+          controller: editSatelitesController,
+          scope: $scope.$new(),
+          templateUrl: 'dialogs/edit_satelite.tmpl.html',
+          parent: angular.element(document.body),
+          clickOutsideToClose:true
+        });
+
+        function editSatelitesController(){
+
+          $scope.submitNode= function(){
+            update($scope.node);
+            $mdDialog.cancel();
+          }
+          
+          $scope.addSatelite = function(){
+
+            if(!$scope.node.satelites)$scope.node.satelites = [];
+            
+            var baby_satelite = {
+                id:generateUUID(),
+                satelite:true,
+                name: "S_"+$scope.node.satelites.length,
+                image: "question.svg",
+                text:"",
+                x: Math.random()*width,
+                y: Math.random()*height,
+                parent:$scope.node.id
+            }
+            
+            $scope.node.satelites.push(baby_satelite);
+          }
+
+          $scope.cancelSatelite = function(){
+            $mdDialog.cancel();
+          }
+
+          $scope.deleteSatelite= function(i){
+            $scope.node.satelites.splice(i,1);
+          }
+        }
+    }
+      
+    function zoomed() {
+      g.attr("transform", "translate(" + d3.event.translate + ")rotate(90)scale(" + d3.event.scale + ")");
+    }
+
     $scope.show = function(ev){
       console.log("zoomed: "+zoomed);
 
@@ -489,19 +445,19 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
       return 'M' + start_x + ',' + start_y + ' ' + 'A' + this_r + ',' + this_r + ' 0 0 1 ' + end_x + ','+ end_y;
     }
 
-    var straightenTheCurve = "M-300,250 A80,80 0 0,1 300,250";//"M-300,254 A10,10 0 0,1 300,254";//
+    var straightenTheCurve = "M-300,250 A80,80 0 0,1 300,250";// Hard coding the straighter curve //
 
     var radialGradient = svg.append("defs")
-      .append("radialGradient")
+        .append("radialGradient")
         .attr("id", "radial-gradient");
 
     radialGradient.append("stop")
         .attr("offset", "0%")
-        .attr("stop-color", "#ed5109");// blue : "#0066cc"
+        .attr("stop-color", "#ed5109");
 
     radialGradient.append("stop")
         .attr("offset", "100%")
-        .attr("stop-color", "#3a3b3d");// blue  "#3a3b3d"  
+        .attr("stop-color", "#3a3b3d");
 
     function processTree(treeJSON){
       root = treeJSON;
@@ -524,10 +480,8 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
         }
       }
 
-      //console.log(root);
-      //root.children.forEach(collapse);
       if(root.children)root.children.forEach(expand);
-
+      else root.children = [];
       update(root);
     }
 
@@ -552,16 +506,19 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
     }
 
     function update(source) {
-
+      console.log("Update source")
+      console.log(source)
+      console.log("root")
+      console.log(root)
       // Compute the new tree layout.
-      nodes = tree.nodes(root).reverse(),
+      var nodes = tree.nodes(root).reverse(),
       links = tree.links(nodes);
 
       // Normalize for fixed-depth.
       var branch_length;
       if(zoomed)branch_length = 4;
       else branch_length = 8;
-      //console.log("branch length : "+branch_length)
+      
       nodes.forEach(function(d) { d.y = d.depth * height/branch_length; });// This controls the width of the links
 
       // Update the nodes…
@@ -612,7 +569,7 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
         .append('textPath')
         .attr("class", "curvedText")
         .attr('startOffset', '50%')
-        .attr('xlink:href', function(d){if(d.name)return '#text_path_'+d.name.replaceAll(' ','_')})//was : .attr('xlink:href', '#curvedTextPath')
+        .attr('xlink:href', function(d){if(d.name)return '#text_path_'+d.name.replaceAll(' ','_')})
         .text(function(d){return d.name});
 
       nodeEnter.append("rect")
@@ -637,7 +594,6 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
         .attr("width", (img_s))
         .attr("height", (img_s))
         .attr("transform", "rotate(-90)")
-
 
       nodeEnter.append("svg:image")
         .attr("id", "add_node")
@@ -693,13 +649,11 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
         .attr("height", 20)
         .attr("transform", "rotate(-90)")
         .append('xhtml:div')
-        .attr("class", "text_box_div")
         .html(function(d){
-          //console.log(d)
+
           var html;
           var children = d.children || d._children;
-          // was below after column : <div class='z_q_a zoomed'>`+d.question+`</div> //
-          //if(d.question){
+
           html= `
               <div layout='column'>
               <div flex='100' layout='row' layout-align="center center" >`;
@@ -707,14 +661,12 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
                 var flex = 100 / children.length;
                 for(var c = children.length - 1; c>-1; c--){
                   if(children[c].answer === 'OK')children[c].answer = "<img src='images/down.svg'/>"
-                  console.log(d.name+ " => " + c + " : " +children[c].answer)
                   html+=`<div class='answer_button zoomed' style="width:`+flex+`%; display:inline-flex" answer_link="`+children[c].name+`">
                           <span>`+children[c].answer+`</span>
                          </div>`
                 }
               }
             html+=`</div></div>`;
-          //}
           return html;
         })
 
@@ -760,30 +712,11 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
           .text(function(d){return d.name});
 
         nodeUpdate.select("#show_satelite")
-          .style("visibility", function(d){return d.satelites ? "visible" : "hidden";})
+          .style("visibility",function(d){return d.satelites ? "visible":"hidden";})
 
-        nodeUpdate.select(".text_box")
+        nodeUpdate.selectAll(".text_box")
           .style("fill-opacity", 1);
 
-        function buildHTMLButtons(d){
-          var html;
-          var children = d.children || d._children;
-          html= `
-              <div layout='column'>
-              <div flex='100' layout='row' layout-align="center center" >`;
-              if(children){
-                var flex = 100 / children.length;
-                for(var c = children.length - 1; c>-1; c--){
-                  console.log("UPDATE DIV "+children[c].answer)
-                  if(children[c].answer === 'OK')children[c].answer = "<img src='images/down.svg'/>"
-                  html+=`<div class='answer_button zoomed' style="width:`+flex+`%; display:inline-flex" answer_link="`+children[c].name+`">
-                          <span>`+children[c].answer+`</span>
-                         </div>`
-                }
-              }
-            html+=`</div></div>`;
-            return html;
-        }
         // Transition exiting nodes to the parent's new position.
         var nodeExit = node.exit().transition()
           .duration(duration)
@@ -795,8 +728,6 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
 
         nodeExit.select("text")
             .style("fill-opacity", 1e-6);
-
-        nodeExit.selectAll("foreignObject").remove();
 
         // Update the links…
         var link = g.selectAll("path.link")
@@ -835,74 +766,75 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
     }
 
     function showInfo(this_name){
-      d3.select('#'+this_name).select(".main")
+      var sel =  d3.select('#'+this_name)
+
+      sel.select(".main")
         .transition()
-        .duration(1000)
+        .duration(duration)
         .attr("height", r*3)
         .attr("y", (-r*1.5))
         .attr("rx",0)
         .attr("ry",0);
 
-      d3.select('#'+this_name).select(".main_text")
+      sel.select(".main_text")
         .style("visibility", "visible")
-        .transition().duration(1000)
+        .transition().duration(duration)
         .style("opacity", 1);
       
-      d3.select('#'+this_name).select(".image")
-        .transition().duration(1000)
+      sel.select(".image")
+        .transition().duration(duration)
         .style("opacity", 0)
         .each("end", function(){d3.select(this).style("visibility", "hidden")})
 
       d3.selectAll('#text_path_'+this_name)
-        .transition().duration(2000)
+        .transition().duration(duration)
         .attr("d", function(d){return straightenTheCurve});
     }
 
     function hideInfo(this_name){
       d3.select('#'+this_name).select(".main")
         .transition()
-        .duration(1000)
+        .duration(duration)
         .attr("height", r*2)
         .attr("y", (-r))
         .attr("rx",r)
         .attr("ry",r);
 
       d3.select('#'+this_name).select(".main_text")
-        .transition().duration(1000)
+        .transition().duration(duration)
         .style("opacity", 0)
         .each("end", function(){d3.select(this).style("visibility", "hidden")})
 
       d3.select('#'+this_name).select("image")
         .style("visibility", "visible")
-        .transition().duration(1000)
+        .transition().duration(duration)
         .style("opacity", 1);
 
       d3.selectAll('#text_path_'+this_name)
-        .transition().duration(2000)
+        .transition().duration(duration)
         .attr("d", function(d){return getCurvePath(1.05)});
     }
 
     function showSateliteInfo(this_name){
-      console.log("SHOW satelite info "+this_name);
       
-      d3.select('#'+this_name).select(".node_background ")
-        .transition().duration(1000)
+      d3.select('#'+this_name).select(".node_background")
+        .transition().duration(duration)
         .attr("y", function(d){return -d.r*2;})
         .attr("height",  function(d){return (d.r*4);})
         .attr("rx", 0)
         .attr("ry", 0);
 
       d3.select('#'+this_name).select(".text_box")
-        .transition().duration(1000)
+        .transition().duration(duration)
         .style("opacity", 1);
 
       d3.select('#'+this_name).select(".image")
-        .transition().duration(1000)
+        .transition().duration(duration)
         .style("opacity", 0);      
 
-        d3.selectAll('#satelite_text_path_'+this_name)//'satelite_text_path_'+d.name.replaceAll(' ','_')
+        d3.selectAll('#satelite_text_path_'+this_name)
         .transition().duration(2000)
-        .attr("d", function(d){return straightenTheCurve;});//getCurvePath(1.05)
+        .attr("d", function(d){return straightenTheCurve;});
 
     }
 
@@ -934,7 +866,7 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
         d.children = d._children;
         d._children = null;
       }
-      // If no children array creete it
+      // If no children array create it
       if(!d.children)d.children = [];
       var baby = {
         id:generateUUID(),
@@ -944,10 +876,11 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
         answer:"",
         parent:d
       }
-      //console.log(baby);
+
       d.children.push(baby); // push the baby
-      update(d); // Show the changesS
+      update(d); // Show the changes
     }
+    
     // Toggle children on click.
     function showChildren(d) {
 
@@ -1097,23 +1030,23 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
     }
   }
 
-  function showTooltip(d){
-    var text = d.tooltip;
+    function showTooltip(d){
+      var text = d.tooltip;
 
-    if(d.offset){var tooltip_offset_y = -70}
-    else var tooltip_offset_y = 20;
+      if(d.offset){var tooltip_offset_y = -70}
+      else var tooltip_offset_y = 20;
 
-    var tooltip_offset_x = -(text.length*3.9);//(d3.event.pageX < ($('body').width()/2)) ? 50 : -150;
-    
-    var x = d3.event.pageX + tooltip_offset_x, y = d3.event.pageY + tooltip_offset_y;
+      var tooltip_offset_x = -(text.length*3.9);
+      
+      var x = d3.event.pageX + tooltip_offset_x, y = d3.event.pageY + tooltip_offset_y;
 
-    d3.select("#tooltip")
-        .style("visibility","visible")
-        .style("left",x + "px")
-        .style("top", y + "px")
-        .html(text);
-  }
-
+      d3.select("#tooltip")
+          .style("visibility","visible")
+          .style("left",x + "px")
+          .style("top", y + "px")
+          .html(text);
+    }
+  }// end start function //
 });
 
 app.filter('capitalize', function() {
@@ -1180,7 +1113,7 @@ function makeTitle(d){
   d = capitalize(d);
   return d.split('.')[0].replace('_', ' ');
 }
-function pointsOnCircle(amount, this_r){
+function pointsOnCircle(amount, this_r){ // Used for spreading the satelites around the parent node evenly 
   var points = [];
   for(var i = 0; i < amount; i++) {
     var x =  this_r * Math.cos(2 * Math.PI * i / amount);
