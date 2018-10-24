@@ -1,5 +1,6 @@
 # treebuilder.io
 
+This is a work in progress.
 A web app for building decision trees : treebuilder.io.
 Built using Node.js, AngularJS, D3.js and MongodDB.
 The view button allows the user to traverse the tree.
