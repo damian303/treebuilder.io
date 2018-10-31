@@ -1,8 +1,10 @@
+html{
+	overflow:hidden!important;/* This isn't ideal, but material dialogs were causing a pointless y-scroll to appear */ 
+}
 body {
   color:#FC4C02 ;
   background-color: #3a3b3d;
   max-height: 100vh;
-  overflow-y: hidden;
 }
 @-webkit-keyframes fontfix {
     from { opacity: 1; }
@@ -23,7 +25,7 @@ body {
 }
 .top p{
 	text-align: center;
-	color:#FC4C02  !important;
+	color:#FC4C02 !important;
 	font-family: 'Roboto', sans-serif;
 	font-size:3.5em !important;
 	font-weight:100;
@@ -142,11 +144,18 @@ md-select{
 .dialog_edit_node_toolbar{
 	font-family: 'Arial', sans-serif !important;
 	color: black !important;
-	/*text-align:center;*/
 	font-size:1.4em !important;
 	font-weight:900 !important;
 }
-
+.node_dialog_image{
+	min-height: 100px;
+	max-height: 105px;
+}
+.node_dialog_text{
+	padding:5px;
+	font-family: 'Roboto', sans-serif !important;
+	font-weight: 600 !important;
+}
 .label{
 	text-align: center;
 	font-family: 'Roboto', sans-serif !important;
@@ -169,28 +178,17 @@ md-select{
  	color:white;
  }
 .z_q_a{
- 	/*background-color: #3a3b3d;*/
  	font-size:.5em;
  	text-align:center;
  	width:auto;
  	margin-bottom:5px;
- 	/*
- 	border-bottom:0.5px dashed grey;
- 	*/
  	color:black;
  }
  .answer_button{
  	text-align:center;
  	color:white;
- 	
  	align-items: center;
   	justify-content: center;
-
-  	/*border-bottom:0.5px solid #d3d3d3;*/
- 	/*
- 	display:inline-flex;
- 	border-bottom:0.5px dashed grey;
- 	*/
  }
  .answer_button span{
  	background-color: #3a3b3d;
@@ -255,13 +253,11 @@ md-select{
 	margin-left: -21px;
 }
 
-/********** New tree stuff *************/
 #tree{
 	overflow:hidden;
 }
 .node {
 	cursor: pointer;
-
 }
 .node circle {
   fill: #fff;
@@ -296,19 +292,19 @@ md-select{
 }
 .curvedText {
 	font-family: 'Roboto', sans-serif !important;
+	font-weight:200 !important;
 	font-size: 8px;
 	color:white !important;
 	text-anchor: middle;
-	font-weight:600 !important;
 	fill:white;
 	stroke:none;
 }
 .curvedTextSatelite {
 	font-family: 'Roboto', sans-serif !important;
+	font-weight:200 !important;
 	font-size: 5px;
 	color:white !important;
 	text-anchor: middle;
-	font-weight:600 !important;
 	fill:white;
 	stroke:none;
 }
