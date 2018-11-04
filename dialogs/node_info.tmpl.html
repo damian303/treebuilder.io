@@ -1,0 +1,30 @@
+<md-dialog class="dialog_node_info" aria-label="Showing info from the node">
+  <form>
+    <md-toolbar class="dialog_edit_node_toolbar">
+      <div class="md-toolbar-tools" layout="row" layout-align="center center">
+        <div><h2>{{this_node.name}}</h2></div>
+      </div>
+    </md-toolbar>
+    <md-dialog-content >
+      <md-content >
+
+        <div layout="row" layout-align="center center" class="md-padding">
+          <img class="node_dialog_image" ng-src="{{'images/tree/'+this_node.image}}"/>
+        </div>
+
+        <md-divider></md-divider>
+
+        <div layout="row" class="node_dialog_text" class="md-padding">
+          {{this_node.question||this_node.text}}
+        </div>
+
+      </md-content>
+    </md-dialog-content>
+    <md-dialog-actions layout="row">
+      <span flex></span>
+      <md-button ng-click="closeInfo()" >
+        OK
+      </md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

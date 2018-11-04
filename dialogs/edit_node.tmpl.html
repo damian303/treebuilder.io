@@ -3,56 +3,110 @@
     <md-toolbar class="dialog_edit_node_toolbar">
       <div class="md-toolbar-tools">
         <h2 flex md-truncate>Edit Node</h2>
+        <md-button class="md-icon-button" ng-click="viewNode()" aria-label="view the node">
+          <md-icon md-svg-icon="images/magnify.svg"></md-icon>
+          <md-tooltip>View the node</md-tooltip>
+        </md-button>
         <md-button ng-if="node.parent" class="md-icon-button" ng-click="deleteNode()" aria-label="Delete the node">
           <md-icon md-svg-icon="images/delete.svg"></md-icon>
           <md-tooltip>Delete the node</md-tooltip>
         </md-button>
-        <md-button class="md-icon-button" ng-click="sateliteControl()" aria-label="Add satelite">
-          <md-icon md-svg-icon="images/satelite.svg"></md-icon>
-          <md-tooltip>Satelite control</md-tooltip>
-        </md-button>
+
       </div>
     </md-toolbar>
     <md-dialog-content >
-      <md-content class="md-padding">
-          <div layout-gt-sm="row" >
-            <md-input-container>
+      <md-tabs md-dynamic-height md-border-bottom>
+        <md-tab label="Node">
+          <md-content class="md-padding">
+            <div layout-gt-sm="row" >
+              <md-input-container>
+                <label>Name</label>
+                <input ng-model="node.name">
+              </md-input-container>
+              <!-- Looking into virtual repeat to speed up dialog loading.
+              <md-virtual-repeat-container id="vertical-container">
+                <label>Image</label>
+                <md-select ng-model="node.image">
+                  <md-option><em>None</em></md-option>
+                  <md-option ng-repeat="image in dynamicImages" ng-value="image.name">
+                    {{::image.title}}<span flex> </span><img class="tiny_img" ng-src="images/tree/{{image.name}}" />
+                  </md-option>
+                </md-select>
+              </md-virtual-repeat-container>-->
+              <md-input-container>
+                <label>Image</label>
+                <md-select ng-model="node.image">
+                  <md-option><em>None</em></md-option>
+                  <md-option ng-repeat="image in image_list" ng-value="image.name">
+                    {{::image.title}}<span flex> </span><img class="tiny_img" ng-src="images/tree/{{image.name}}" />
+                  </md-option>
+                </md-select>
+              </md-input-container>
+            </div>
+            <div  layout-gt-sm="row"><!--ng-if="node.parent"-->
+              <md-input-container flex>
+                <label>Entry Question</label>
+                <textarea ng-model="node.parent.question" md-maxlength="250" rows="1" md-select-on-focus></textarea>
+              </md-input-container>
+            </div>
+            <div ng-if="node.parent" layout-gt-sm="row">
+              <md-input-container flex>
+                <label>Entry Answer</label>
+                <input ng-model="node.answer">
+              </md-input-container>
+            </div>
+            <div layout-gt-sm="row">
+              <md-input-container flex="100" class="md-block">
+                <label>Node Text</label>
+                <textarea ng-model="node.question" md-maxlength="250" rows="1" md-select-on-focus></textarea>
+              </md-input-container>
+            </div>
+            <div layout-gt-sm="row">
+              <md-switch class="md-primary" md-no-ink aria-label="Switch No Ink" ng-true-value="'text'" ng-false-value="'image'" ng-model="node.node_type">
+                {{node.node_type | capitalize}}
+              </md-switch>
+            </div>
+        </md-content>
+      </md-tab>
+      <md-tab label="Satelites">
+        <md-content class="md-padding">
+            <div layout-gt-sm="row" ng-repeat="satelite in node.satelites">
+
+            <md-input-container flex>
               <label>Name</label>
-              <input ng-model="node.name">
+              <input ng-model="satelite.name">
             </md-input-container>
-            <md-input-container>
+
+            <md-input-container flex>
               <label>Image</label>
-              <md-select ng-model="node.image">
+              <md-select ng-model="satelite.image">
                 <md-option><em>None</em></md-option>
                 <md-option ng-repeat="image in image_list" ng-value="image.name">
-                  {{image.title}}<span flex> </span><img class="tiny_img" ng-src="images/tree/{{image.name}}" />
+                  <div flex="100">
+                    {{::image.title}}<span flex> </span><img class="tiny_img" ng-src="images/tree/{{image.name}}" />
+                  </div>
                 </md-option>
               </md-select>
             </md-input-container>
-          </div>
-          <div  layout-gt-sm="row"><!--ng-if="node.parent"-->
-            <md-input-container flex>
-              <label>Entry Question</label>
-              <textarea ng-model="node.parent.question" md-maxlength="250" rows="1" md-select-on-focus></textarea>
+          
+            <md-input-container >
+              <label>Satelite Text</label>
+              <textarea ng-model="satelite.text" md-maxlength="250" rows="1" md-select-on-focus></textarea>
             </md-input-container>
-          </div>
-          <div ng-if="node.parent" layout-gt-sm="row">
-            <md-input-container flex>
-              <label>Entry Answer</label>
-              <input ng-model="node.answer">
-            </md-input-container>
-          </div>
-          <div layout-gt-sm="row">
-            <md-input-container flex="100" class="md-block">
-              <label>Node Text</label>
-              <textarea ng-model="node.question" md-maxlength="250" rows="1" md-select-on-focus></textarea>
-            </md-input-container>
-          </div>
-          <div ng-if="node.satelites" layout-gt-sm="row">
-            {{JSON.stringify(node.satelites)}}
+
+            <md-icon md-svg-icon="images/delete.svg" ng-click="deleteSatelite($index)"></md-icon>
+
           </div>
 
-      </md-content>
+          <div layout-gt-sm="row" layout-align="center center" flex="100">
+            <md-button class="md-icon-button" ng-click="addSatelite()" aria-label="Add satelite">
+              <md-icon md-svg-icon="images/add_black.svg" ></md-icon>
+              <md-tooltip>Add Satelite</md-tooltip>
+            </md-button>
+          </div>
+
+        </md-content>
+      </md-tab>
     </md-dialog-content>
     <md-dialog-actions layout="row">
       <span flex></span>
