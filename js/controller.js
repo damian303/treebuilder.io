@@ -2,12 +2,12 @@ let app = angular.module('App', ['ngMaterial', 'ngMessages', 'ngAnimate', 'ngSan
 
 let force, force_g, link_force, node_force;
 
-app.config(function($httpProvider, $mdThemingProvider, $mdIconProvider, $mdDateLocaleProvider) {
+app.config(function($mdThemingProvider, $mdIconProvider) {
 
-  /******* Primary theme Firefly Orange *****/
+  /******* Primary theme *****/
   $mdThemingProvider.theme('default')
-    .primaryPalette('deep-orange')//deep-orange
-    .accentPalette('deep-orange');//indigo
+    .primaryPalette('deep-orange')
+    .accentPalette('indigo');
   /****** Theme options *******/
   $mdThemingProvider.theme('dark-grey').backgroundPalette('grey').dark();
   $mdThemingProvider.theme('dark-orange').backgroundPalette('orange').dark();
@@ -346,9 +346,6 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
       .on("zoom", zoomed_func);
 
     function zoomed_func() {
-      var translateX = d3.event.translate[0];
-      var translateY = d3.event.translate[1];
-      var xScale = d3.event.scale;
       pan_g.attr("transform", "translate(" + d3.event.translate[0] + "," + d3.event.translate[1] + ")scale(" + d3.event.scale + ")");
     }
 
