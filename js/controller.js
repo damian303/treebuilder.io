@@ -25,10 +25,10 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
 
   $scope.username = "test_user";
   $scope.image_list = [];
-  $scope.this_tree_name = 'PPO_1';
+  $scope.this_tree_name = 'test_tree';
   $scope.showing = false;
 
-  let start_tree = 'PPO_1';
+  let start_tree = 'test_tree';
   let zoom_level = 3;
   let zoomed = false;
   let originatorEv;
@@ -142,29 +142,7 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
       })      
     }
   } 
-/*
-  let promiseImages = new Promise(function(resolve, reject){
-    $http.post(server+"get_image_list", {
-        data: {}
-      }).then(function success(response) {
-        const d = response.data;
-        let temp = [];
-        for(var i in d){
-          temp.push({title: makeTitle(d[i]), name:d[i]});
-        };
-        resolve(temp);// fulfilled
-      },function (err){
-        reject(err);
-      })
-  });
 
-  var getPromisedImages = function(){
-    promiseImages
-      .then(function(fulfilled){$scope.image_list = fulfilled;})
-      .catch(function(error){console.log(error.message)});
-  }
-  getPromisedImages();
-  */
   getImages();
 
   function getImages(){
@@ -205,11 +183,10 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
       }else{
 
         // *********** Convert flat data into a nice tree ***************
-        var data = response.data.tree;
+        let data = response.data.tree;
         console.log(data);
         $scope.this_tree_name = name;
-        var tree_data = niceTree(data);
-        //console.log(tree_data)
+        let tree_data = niceTree(data);
         processTree(tree_data[0]);
       }
     });
@@ -262,8 +239,8 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
   $scope.download = download;
 
   function downloadObjectAsJson(exportObj, exportName){
-    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
-    var downloadAnchorNode = document.createElement('a');
+    let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+    let downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href",     dataStr);
     downloadAnchorNode.setAttribute("download", exportName + ".json");
     document.body.appendChild(downloadAnchorNode); // required for firefox
@@ -313,7 +290,6 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
             $mdDialog.cancel();
             editSatelites(node)
           }
-
 
           $scope.addSatelite = function(){
 
@@ -380,20 +356,9 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
       .attr("width", width)
       .attr("height", height + margin.top + margin.bottom)
       .call(zoom)
-      /*.call(d3.behavior.zoom().on("zoom", function () {
-        console.log("panning G")
-        console.log(d3.event.translate)
-
-        //pan_zoom.translate = d3.event.translate;
-        //pan_zoom.scale = d3.event.scale;
-
-        pan_g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")")
-      }))*/
         
     let pan_g = svg.append("g")
-
-      
-    
+ 
     let g = pan_g.append("g")
       .attr("id", "main_g")
       .attr("transform", function() {
@@ -401,7 +366,6 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
           .translate( (width), margin.top+r+100)
           .rotate(90)();
       })
-
 
     $scope.newTree = function(ev){
       $scope.nodes=[];
@@ -436,8 +400,6 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
       let focus_node, scale, translate;
       // Find the current g translate
       let t = d3.transform(pan_g.attr("transform")).translate;
-      console.log("Focus on : "+target)
-      console.log("t = x : "+t[0]+" | y : "+t[1]);
       
       if(target==='zoom_out'){
         let x = width / 2;
@@ -452,7 +414,6 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
           let y = focus_node.y;
           scale = zoom_level;
           translate = [ (width / 2 - scale * -x) - t[0], (height / 2 - scale * y) - t[1]];
-          console.log(focus_node)
           setTimeout(function(){ showSatelite(focus_node); }, 1000);          
         }  
       }
@@ -464,7 +425,6 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
 
       }else{
           console.log("Target "+target+" not found.")
-          console.log(nodes);
       }
       update(root)
     }
@@ -480,17 +440,17 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
 
     function getCurvePath(size_relative_to_r) {
       // Creating an Arc path
-      var this_r = r * size_relative_to_r;//1.05
-      var start_x =  -this_r;
-      var start_y =  0;
-      var end_x =  this_r;
-      var end_y =  0;
+      let this_r = r * size_relative_to_r;//1.05
+      let start_x =  -this_r;
+      let start_y =  0;
+      let end_x =  this_r;
+      let end_y =  0;
       // return svg path
       return 'M' + start_x + ',' + start_y + ' ' + 'A' + this_r + ',' + this_r + ' 0 0 1 ' + end_x + ','+ end_y;
     }
 
 
-    var radial_gradient = svg.append("defs")
+    let radial_gradient = svg.append("defs")
         .append("radialGradient")
         .attr("id", "radial-gradient");
 
@@ -533,7 +493,7 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
       //this is the links target node which you want to remove
       //console.log(d)
       //make new set of children
-      var children = [];
+      let children = [];
       //iterate through the children 
       d.parent.children.forEach(function(child){
        if (child.id != d.id){
@@ -556,19 +516,19 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
       links = tree.links(nodes);
 
       // Normalize for fixed-depth.
-      var branch_length;
+      let branch_length;
       if(zoomed)branch_length = 4;// when zoomed the distance between nodes is longer //
       else branch_length = 8;
       //console.log("branch length : "+branch_length)
       nodes.forEach(function(d) { d.y = d.depth * height/branch_length; });// This controls the width of the links
 
       // Update the nodes…
-      var node = g.selectAll("g.node")
+      let node = g.selectAll("g.node")
         .data(nodes, function(d) { return d.id || generateUUID(); });
         //.data(nodes, function(d) { return d.id || (d.id = ++i); });
 
       // Enter any new nodes at the parent's previous position.
-      var nodeEnter = node.enter().append("g")
+      let nodeEnter = node.enter().append("g")
         .attr("class", "node")
         .attr("id", function(d){return d.id })//if(d.name)return d.name.replaceAll(' ','_');})
         .style('pointer-events', 'all')
@@ -679,13 +639,13 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
         .append('xhtml:div')
         .attr("class", "text_box_div")
         .html(function(d,i){
-          var html;
-          var children = d.children || d._children;
+          let html;
+          let children = d.children || d._children;
           html= `
               <div layout='column'>
               <div flex='100' layout='row' layout-align="center center" >`;
               if(children){
-                var flex = 100 / children.length;
+                let flex = 100 / children.length;
                 for(var c = children.length - 1; c>-1; c--){
                   if(children[c].answer === 'OK')children[c].answer = "<img src='images/down.svg'/>"
                   //console.log(d.name+ " => " + c + " : " +children[c].answer)
@@ -779,7 +739,7 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
         link.exit().transition()
           .duration(duration)
           .attr("d", function(d) {
-            var o = {x: source.x, y: source.y};
+            let o = {x: source.x, y: source.y};
             return diagonal({source: o, target: o});
           })
           .remove();
@@ -836,7 +796,6 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
         answer:"",
         parent:d
       }
-      //console.log(baby);
       d.children.push(baby); // push the baby
       update(d); // Show the changesS
     }
@@ -969,7 +928,7 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
         .append('xhtml:div')
         .html(function(d){
           if(d.text){
-            var html ="<div class='satelite_text'>"+d.text+"</div>";
+            let html ="<div class='satelite_text'>"+d.text+"</div>";
             return html;
           }
         });
@@ -993,12 +952,6 @@ app.controller('main_ctrl', function($scope, $http, $mdDialog, $mdMedia, $mdSide
 app.filter('capitalize', function() {
     return function(input) {
       return (!!input) ? input.charAt(0).toUpperCase() + input.substr(1).toLowerCase() : '';
-    }
-});
-
-app.filter('firstLetter', function() {
-    return function(input) {
-      return input.charAt(0).toUpperCase();
     }
 });
 
